@@ -36,20 +36,14 @@ http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 	
 	<bean id="reader" class="org.springframework.batch.item.file.FlatFileItemReader" scope="step">
 		<property name="resource" value="file:#{jobParameters['targetDirectory']+jobParameters['targetFile']}" />
-		<property name="linesToSkip" value="1" />
 		<property name="lineMapper">
-			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
-				<property name="lineTokenizer">
-					<bean class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
-						<property name="names" value="ID,NAME,DESCRIPTION,PRICE" />
-					</bean>
-				</property>
-				<property name="fieldSetMapper">
-					<bean class="com.example.batch.ProductFieldSetMapper" />
-				</property>
+			<bean class="com.example.batch.JsonLineMapperWrapper">
+				<property name="delegate" ref="jsonLineMapper" />
 			</bean>
 		</property>
 	</bean>
+	
+	<bean id="jsonLineMapper" class="org.springframework.batch.item.file.mapping.JsonLineMapper" />
 	
 	<bean id="processor" class="com.example.processor.Processor" />
 

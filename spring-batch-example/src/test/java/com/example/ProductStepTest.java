@@ -32,7 +32,7 @@ public class ProductStepTest {
 		JobParameters jobParameters = new JobParametersBuilder()
 				.addString("inputResource", "classpath:/input/products.zip")
 				.addString("targetDirectory", "./target/importproductsbatch/")
-				.addString("targetFile", "products.txt")
+				.addString("targetFile", "products.json")
 				.addLong("timestamp", System.currentTimeMillis())
 				.toJobParameters();
 		
