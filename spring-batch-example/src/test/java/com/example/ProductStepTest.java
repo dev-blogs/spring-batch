@@ -42,7 +42,12 @@ public class ProductStepTest {
 				.toJobParameters();
 		
 		jobLauncher.run(job, jobParameters);
+		String name = simpleJdbcTemplate.queryForObject("SELECT name FROM products WHERE ID = 1", String.class);
+		assertEquals("BlackBerry 8100 Pearl", name);
+		
 		jobOperator.startNextInstance("importProducts");
+		name = simpleJdbcTemplate.queryForObject("SELECT name FROM products WHERE ID = 1", String.class);
+		assertEquals("test1", name);
 		
 		assertEquals(5, simpleJdbcTemplate.queryForInt("SELECT count(*) FROM products"));
 	}
