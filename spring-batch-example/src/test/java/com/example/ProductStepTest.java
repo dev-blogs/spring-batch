@@ -6,7 +6,9 @@ import org.junit.runner.RunWith;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
@@ -20,15 +22,18 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 	})
 public class ProductStepTest {
 	@Autowired
-	private Job job;
+	private JobRegistry jobRegistry;
 	@Autowired
 	private JobLauncher jobLauncher;
+	@Autowired
+	private JobOperator jobOperator;
 	@Autowired
 	private SimpleJdbcTemplate simpleJdbcTemplate;
 	
 	@Test
 	@DirtiesContext
 	public void testIntegration() throws Exception {
+		Job job = jobRegistry.getJob("importProducts");
 		JobParameters jobParameters = new JobParametersBuilder()
 				.addString("inputResource", "classpath:/input/products.zip")
 				.addString("targetDirectory", "./target/importproductsbatch/")
@@ -37,6 +42,7 @@ public class ProductStepTest {
 				.toJobParameters();
 		
 		jobLauncher.run(job, jobParameters);
+		jobOperator.startNextInstance("importProducts");
 		
 		assertEquals(5, simpleJdbcTemplate.queryForInt("SELECT count(*) FROM products"));
 	}

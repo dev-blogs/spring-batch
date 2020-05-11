@@ -10,14 +10,6 @@
 			http://www.springframework.org/schema/batch
 			http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 
-	<!-- <bean id="dataSource" class="org.springframework.jdbc.datasource.SingleConnectionDataSource">
-		<property name="driverClassName" value="org.h2.Driver" />
-		<property name="url" value="jdbc:h2:tcp://localhost/mem:sbia_ch02" />
-		<property name="username" value="sa" />
-		<property name="password" value="" />
-		<property name="suppressClose" value="true" />
-	</bean> -->
-
 	<jdbc:embedded-database id="dataSource" type="H2">
 		<jdbc:script location="db/create-tables.sql" />
 		<jdbc:script location="org/springframework/batch/core/schema-h2.sql" />
@@ -31,14 +23,27 @@
 		<property name="dataSource" ref="dataSource" />
 	</bean>
 	
-	<!-- <bean id="jobRepository" class="org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean">
-		<property name="transactionManager" ref="transactionManager"/>
-	</bean> -->
+	<bean id="jobOperator" class="org.springframework.batch.core.launch.support.SimpleJobOperator">
+		<property name="jobRepository" ref="jobRepository"/>
+		<property name="jobLauncher" ref="jobLauncher" />
+		<property name="jobRegistry" ref="jobRegistry" />
+		<property name="jobExplorer" ref="jobExplorer" />
+	</bean>
 	
 	<batch:job-repository id="jobRepository" transaction-manager="transactionManager" />
 	
 	<bean id="jobLauncher" class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
 		<property name="jobRepository" ref="jobRepository" />
+	</bean>
+	
+	<bean id="jobRegistry" class="org.springframework.batch.core.configuration.support.MapJobRegistry" />
+	
+	<bean id="jobExplorer" class="org.springframework.batch.core.explore.support.JobExplorerFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<bean class="org.springframework.batch.core.configuration.support.JobRegistryBeanPostProcessor">
+		<property name="jobRegistry" ref="jobRegistry" />
 	</bean>
 	
 	<bean class="org.springframework.jdbc.core.JdbcTemplate">
