@@ -1,6 +1,0 @@
-1. mvn package
-2. mvn dependency:copy-dependencies
-3. mkdir run
-4. cp -r target/dependency run/libs
-5. cp target/spring-batch-example-0.0.1-SNAPSHOT.jar run
-java -classpath .:./libs/* org.springframework.batch.core.launch.support.CommandLineJobRunner import-poducts-job-context.xml importProducts inputResource=classpath:/input/products.zip targetDirectory=./target/importproductsbatch/ targetFile=products.txt timestamp=1
