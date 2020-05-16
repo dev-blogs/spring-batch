@@ -6,7 +6,9 @@ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 http://www.springframework.org/schema/batch
 http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 
-	<job id="importProducts" xmlns="http://www.springframework.org/schema/batch">
+	<import resource="classpath:spring/infrustructure-context.xml"/>
+
+	<job id="importProducts" job-repository="jobRepository" xmlns="http://www.springframework.org/schema/batch">
 		<listeners>
 			<listener ref="jobListener" />
 		</listeners>
