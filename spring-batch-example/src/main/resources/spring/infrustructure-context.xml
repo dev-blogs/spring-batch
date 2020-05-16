@@ -35,7 +35,12 @@
 		<property name="transactionManager" ref="transactionManager"/>
 	</bean> -->
 	
-	<batch:job-repository id="jobRepository" transaction-manager="transactionManager" />
+	<!-- all this attributes are used by default except isolation-level -->
+	<batch:job-repository id="jobRepository" 
+		data-source="dataSource"
+		transaction-manager="transactionManager" 
+		isolation-level-for-create="REPEATABLE_READ"
+		table-prefix="BATCH_"/>
 	
 	<bean id="jobLauncher" class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
 		<property name="jobRepository" ref="jobRepository" />
