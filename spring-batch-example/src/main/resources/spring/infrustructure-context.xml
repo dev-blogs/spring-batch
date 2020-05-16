@@ -12,7 +12,6 @@
 
 	<jdbc:embedded-database id="dataSource" type="H2">
 		<jdbc:script location="db/create-tables.sql" />
-		<jdbc:script location="org/springframework/batch/core/schema-h2.sql" />
 	</jdbc:embedded-database>
 	
 	<bean id="simpleJdbcTemplate" class="org.springframework.jdbc.core.simple.SimpleJdbcTemplate">

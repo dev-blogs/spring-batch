@@ -9,9 +9,9 @@ http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 	<import resource="classpath:spring/infrustructure-context.xml"/>
 
 	<job id="importProducts" job-repository="jobRepository" xmlns="http://www.springframework.org/schema/batch">
-		<listeners>
+		<!-- <listeners>
 			<listener ref="jobListener" />
-		</listeners>
+		</listeners> -->
 		<step id="decompress" next="readWriteProducts">
 			<tasklet ref="decompressTasklet"/>
 		</step>
@@ -53,8 +53,6 @@ http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 		</property>
 	</bean>
 	
-	<bean id="processor" class="com.example.processor.Processor" />
-
 	<bean id="writer" class="com.example.batch.ProductJdbcItemWriter">
 		<property name="simpleJdbcTemplate" ref="simpleJdbcTemplate" />
 		<property name="itemSqlParameterSourceProvider">
