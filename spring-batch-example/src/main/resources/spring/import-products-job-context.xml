@@ -2,9 +2,9 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:batch="http://www.springframework.org/schema/batch"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
-http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-http://www.springframework.org/schema/batch
-http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
+						http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+						http://www.springframework.org/schema/batch
+						http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 
 	<!-- job-repository="jobRepository" uses by default -->
 	<job id="importProducts" job-repository="jobRepository" xmlns="http://www.springframework.org/schema/batch">
@@ -16,14 +16,28 @@ http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 		</step>
 		<step id="readWriteProducts">
 			<tasklet>
-				<chunk reader="reader" writer="writer" commit-interval="100" skip-limit="5">
+				<chunk reader="reader" processor="processor" writer="writer" commit-interval="100" skip-limit="5">
 					<skippable-exception-classes>
 						<include class="org.springframework.batch.item.file.FlatFileParseException"/>
 					</skippable-exception-classes>
 				</chunk>
 			</tasklet>
+			<next on="*" to="clean"/>
+			<next on="FAILED" to="generateReport"/>
+		</step>
+		<step id="generateReport" next="clean">
+			<tasklet ref="generateReportTasklet"/>
+		</step>
+		<step id="clean">
+			<tasklet ref="cleanTasklet"/>
 		</step>
 	</job>
+	
+	<bean id="generateReportTasklet" class="com.example.batch.tasklet.GenerateReportTasklet">
+	</bean>
+	
+	<bean id="cleanTasklet" class="com.example.batch.tasklet.CleanTasklet">
+	</bean>
 	
 	<bean id="jobListener" class="com.example.batch.listener.JobListener">
 		<property name="simpleJdbcTemplate" ref="simpleJdbcTemplate" />
