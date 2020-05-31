@@ -12,6 +12,6 @@ public class CleanTasklet implements Tasklet {
 
 	@Override
 	public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-		return null;
+		return RepeatStatus.FINISHED;
 	}
 }
