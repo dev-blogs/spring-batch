@@ -16,14 +16,17 @@
 		</step>
 		<step id="readWriteProducts">
 			<tasklet>
-				<chunk reader="reader" processor="processor" writer="writer" commit-interval="100" skip-limit="5">
+				<listeners>
+					<listener ref="stepListener" />
+				</listeners>
+				<chunk reader="reader" processor="processor" writer="writer" commit-interval="10" skip-limit="5">
 					<skippable-exception-classes>
 						<include class="org.springframework.batch.item.file.FlatFileParseException"/>
 					</skippable-exception-classes>
 				</chunk>
 			</tasklet>
 			<next on="*" to="clean"/>
-			<next on="FAILED" to="generateReport"/>
+			<next on="COMPLETED WITH SKIPS" to="generateReport"/>
 		</step>
 		<step id="generateReport" next="clean">
 			<tasklet ref="generateReportTasklet"/>
@@ -33,7 +36,10 @@
 		</step>
 	</job>
 	
+	<bean id="stepListener" class="com.example.batch.listener.ProductsStepListener" />
+	
 	<bean id="generateReportTasklet" class="com.example.batch.tasklet.GenerateReportTasklet">
+		<property name="simpleJdbcTemplate" ref="simpleJdbcTemplate" />
 	</bean>
 	
 	<bean id="cleanTasklet" class="com.example.batch.tasklet.CleanTasklet">
