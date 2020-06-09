@@ -14,20 +14,19 @@
 		<step id="decompress" next="readWriteProducts">
 			<tasklet ref="decompressTasklet"/>
 		</step>
-		<step id="readWriteProducts">
+		<step id="readWriteProducts" next="skippedItemsDecision">
 			<tasklet>
-				<listeners>
-					<listener ref="stepListener" />
-				</listeners>
 				<chunk reader="reader" processor="processor" writer="writer" commit-interval="10" skip-limit="5">
 					<skippable-exception-classes>
 						<include class="org.springframework.batch.item.file.FlatFileParseException"/>
 					</skippable-exception-classes>
 				</chunk>
 			</tasklet>
+		</step>
+		<decision id="skippedItemsDecision" decider="skippedItemDecider">
 			<next on="*" to="clean"/>
 			<next on="COMPLETED WITH SKIPS" to="generateReport"/>
-		</step>
+		</decision>
 		<step id="generateReport" next="clean">
 			<tasklet ref="generateReportTasklet"/>
 		</step>
@@ -36,7 +35,7 @@
 		</step>
 	</job>
 	
-	<bean id="stepListener" class="com.example.batch.listener.ProductsStepListener" />
+	<bean id="skippedItemDecider" class="com.example.batch.decider.SkippedItemsDecider" />
 	
 	<bean id="generateReportTasklet" class="com.example.batch.tasklet.GenerateReportTasklet">
 		<property name="simpleJdbcTemplate" ref="simpleJdbcTemplate" />
