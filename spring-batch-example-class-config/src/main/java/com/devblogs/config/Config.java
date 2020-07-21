@@ -6,9 +6,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Map;
 import java.util.zip.ZipInputStream;
-
 import javax.sql.DataSource;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.batch.core.Job;
@@ -32,12 +30,12 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-
 import com.devblogs.batch.mapper.ProductFieldSetMapper;
 import com.devblogs.batch.mapper.ProductJdbcItemWriter;
 import com.devblogs.model.Product;
 
 /**
+ * https://docs.spring.io/spring-batch/docs/current/reference/html/step.html
  * https://stackoverflow.com/questions/22108315/how-can-i-configure-spring-batch-stepscope-using-java-based-configuration
  * https://docs.spring.io/spring-batch/docs/3.0.x/reference/html/configureStep.html
  * @author vostro
