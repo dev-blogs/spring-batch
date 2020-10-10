@@ -135,8 +135,6 @@ public class Config {
 		return writer;
 	}
 	
-	
-	
 	@Bean
 	public Tasklet generateReportTasklet() {
 		final String SQL = "INSERT INTO reports (exit_status_code, description) VALUES (?, ?)";
