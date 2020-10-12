@@ -50,6 +50,7 @@ public class Config {
 	private static final String JOB_MASTER_STEP = "jobMasterStep";
 	private static final String DECOMPRESS_STEP = "decompressStep";
 	private static final String GENERATE_REPORT_STEP = "generateReportStep";
+	private static final String GENERATE_CLEAN_STEP = "generateCleanStep";
 	
 	@Autowired
 	private JobBuilderFactory jobBuilderFactory;
@@ -64,15 +65,24 @@ public class Config {
 	public Job job() {
 		return jobBuilderFactory.get(JOB_NAME)
 				.start(decompress())
-				.next(masterStep())
-				.on("COMPLETED WITH SKIPS").to(generateReport()).end()
+				.next(readWriteStep())
+				.on("COMPLETED WITH SKIPS").to(generateReportStep())
+				.from(readWriteStep()).on("*").to(cleanStep())
+				.from(generateReportStep()).on("*").to(cleanStep()).end()
 				.build();
 	}
 	
 	@Bean
-	public Step generateReport() {
+	public Step generateReportStep() {
 		return stepBuilderFactory.get(GENERATE_REPORT_STEP)
 				.tasklet(generateReportTasklet())
+				.build();
+	}
+	
+	@Bean
+	public Step cleanStep() {
+		return stepBuilderFactory.get(GENERATE_CLEAN_STEP)
+				.tasklet(cleanTasklet())
 				.build();
 	}
 	
@@ -84,7 +94,7 @@ public class Config {
 	}
 	
 	@Bean
-	public Step masterStep() {
+	public Step readWriteStep() {
 		return stepBuilderFactory.get(JOB_MASTER_STEP)
 				.listener(new ProductsStepListener())
 				.<Product, Product>chunk(10)
@@ -136,15 +146,6 @@ public class Config {
 	}
 	
 	@Bean
-	public Tasklet generateReportTasklet() {
-		final String SQL = "INSERT INTO reports (exit_status_code, description) VALUES (?, ?)";
-		return (sc, cc) -> {
-			jdbcTemplate.update(SQL, "skip items", sc.getSkipCount() + "");
-			return RepeatStatus.FINISHED;
-		};
-	}
-	
-	@Bean
 	@StepScope
 	public Tasklet decompressTasklet(@Value("#{jobParameters}") Map<String, Object> jobParameters) {
 		Resource inputResource = new ClassPathResource((String) jobParameters.get("inputResource"));
@@ -172,6 +173,22 @@ public class Config {
 			if (!target.exists()) {
 				throw new IllegalStateException("Could not decompress anything from the archive!");
 			}
+			return RepeatStatus.FINISHED;
+		};
+	}
+	
+	@Bean
+	public Tasklet generateReportTasklet() {
+		final String SQL = "INSERT INTO reports (exit_status_code, description) VALUES (?, ?)";
+		return (sc, cc) -> {
+			jdbcTemplate.update(SQL, "skip items", sc.getSkipCount() + "");
+			return RepeatStatus.FINISHED;
+		};
+	}
+	
+	@Bean
+	public Tasklet cleanTasklet() {
+		return (sc, cc) -> {
 			return RepeatStatus.FINISHED;
 		};
 	}
