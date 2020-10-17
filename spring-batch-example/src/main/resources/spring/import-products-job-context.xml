@@ -10,10 +10,13 @@ http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 		<listeners>
 			<listener ref="jobListener" />
 		</listeners>
-		<step id="decompress" next="readWriteProducts">
+		<step id="decompress" next="verify">
 			<tasklet ref="decompressTasklet"/>
 		</step>
-		<step id="readWriteProducts">
+		<step id="verify" next="readWriteProducts">
+			<tasklet ref="verifyTasklet"/>
+		</step>
+		<step id="readWriteProducts" next="track">
 			<tasklet>
 				<chunk reader="reader" writer="writer" commit-interval="100" skip-limit="5">
 					<skippable-exception-classes>
@@ -21,6 +24,9 @@ http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 					</skippable-exception-classes>
 				</chunk>
 			</tasklet>
+		</step>
+		<step id="track">
+			<tasklet ref="trackTasklet"/>
 		</step>
 	</job>
 	
@@ -33,6 +39,10 @@ http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 		<property name="targetDirectory" value="#{jobParameters['targetDirectory']}" />
 		<property name="targetFile" value="#{jobParameters['targetFile']}" />
 	</bean>
+	
+	<bean id="verifyTasklet" class="com.example.batch.tasklet.VerifyStoreInJobExecutionContext"/>
+	
+	<bean id="trackTasklet" class="com.example.batch.tasklet.TrackImportFromJobContextTasklet"/>
 	
 	<bean id="reader" class="org.springframework.batch.item.file.FlatFileItemReader" scope="step">
 		<property name="resource" value="file:#{jobParameters['targetDirectory']+jobParameters['targetFile']}" />
