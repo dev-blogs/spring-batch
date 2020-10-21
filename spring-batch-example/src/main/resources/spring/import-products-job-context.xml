@@ -15,6 +15,9 @@ http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 		</step>
 		<step id="verify" next="readWriteProducts">
 			<tasklet ref="verifyTasklet"/>
+			<listeners>
+				<listener ref="promotionListener" />
+			</listeners>
 		</step>
 		<step id="readWriteProducts" next="track">
 			<tasklet>
@@ -29,6 +32,10 @@ http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 			<tasklet ref="trackTasklet"/>
 		</step>
 	</job>
+	
+	<bean id="promotionListener" class="org.springframework.batch.core.listener.ExecutionContextPromotionListener">
+		<property name="keys" value="importId" />
+	</bean>
 	
 	<bean id="jobListener" class="com.example.batch.listener.JobListener">
 		<property name="simpleJdbcTemplate" ref="simpleJdbcTemplate" />

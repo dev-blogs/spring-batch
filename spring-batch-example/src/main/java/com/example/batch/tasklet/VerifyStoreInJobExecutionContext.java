@@ -9,8 +9,8 @@ import org.springframework.batch.repeat.RepeatStatus;
 public class VerifyStoreInJobExecutionContext implements Tasklet {
 	@Override
 	public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-		ExecutionContext jobExecutionContext = chunkContext.getStepContext().getStepExecution().getJobExecution().getExecutionContext();
-		jobExecutionContext.put("importId", "ID");
+		ExecutionContext stepExecutionContext = chunkContext.getStepContext().getStepExecution().getExecutionContext();
+		stepExecutionContext.put("importId", "ID");
 		return RepeatStatus.FINISHED;
 	}
 }
