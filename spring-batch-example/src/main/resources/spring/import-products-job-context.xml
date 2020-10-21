@@ -42,7 +42,9 @@ http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 	
 	<bean id="verifyTasklet" class="com.example.batch.tasklet.VerifyStoreInJobExecutionContext"/>
 	
-	<bean id="trackTasklet" class="com.example.batch.tasklet.TrackImportFromJobContextTasklet"/>
+	<bean id="trackTasklet" class="com.example.batch.tasklet.TrackImportFromJobContextTasklet" scope="step">
+		<property name="importId" value="#{jobExecutionContext['importId']}" />
+	</bean>
 	
 	<bean id="reader" class="org.springframework.batch.item.file.FlatFileItemReader" scope="step">
 		<property name="resource" value="file:#{jobParameters['targetDirectory']+jobParameters['targetFile']}" />
