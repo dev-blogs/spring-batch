@@ -37,8 +37,8 @@ http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 		<property name="importMetadataHolder" ref="importMetadataHolder" />
 	</bean>
 	
-	<bean id="trackTasklet" class="com.example.batch.tasklet.TrackImportWithHolderTasklet">
-		<property name="importMetadataHolder" ref="importMetadataHolder" />
+	<bean id="trackTasklet" class="com.example.batch.tasklet.TrackImportWithHolderTasklet" scope="step">
+		<property name="importId" value="#{importMetadataHolder.get().getImportId()}" />
 	</bean>
 	
 	<bean id="jobListener" class="com.example.batch.listener.JobListener">
