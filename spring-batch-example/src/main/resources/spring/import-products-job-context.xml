@@ -7,13 +7,20 @@ http://www.springframework.org/schema/batch
 http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 
 	<!-- job-repository="jobRepository" uses by default -->
+	<flow id="prepare" xmlns="http://www.springframework.org/schema/batch">
+		<step id="decompress" next="verify">
+			<tasklet ref="decompressTasklet"/>
+		</step>
+		<step id="verify">
+			<tasklet ref="verifyTasklet" />
+		</step>
+	</flow>
+	
 	<job id="importProducts" job-repository="jobRepository" xmlns="http://www.springframework.org/schema/batch">
 		<listeners>
 			<listener ref="jobListener" />
 		</listeners>
-		<step id="decompress" next="readWriteProducts">
-			<tasklet ref="decompressTasklet"/>
-		</step>
+		<flow parent="prepare" id="importProducts.prepare" next="readWriteProducts" />
 		<step id="readWriteProducts">
 			<tasklet>
 				<chunk reader="reader" writer="writer" commit-interval="100" skip-limit="5">
@@ -28,6 +35,8 @@ http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 	<bean id="jobListener" class="com.example.batch.listener.JobListener">
 		<property name="simpleJdbcTemplate" ref="simpleJdbcTemplate" />
 	</bean>
+	
+	<bean id="verifyTasklet" class="com.example.batch.tasklet.VerifyTasklet" />
 	
 	<bean id="decompressTasklet" class="com.example.batch.DecompressTasklet" scope="step">
 		<property name="inputResource" value="#{jobParameters['inputResource']}" />
