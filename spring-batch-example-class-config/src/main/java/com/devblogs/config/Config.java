@@ -18,6 +18,8 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.builder.FlowBuilder;
+import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.step.skip.SkipPolicy;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.file.FlatFileItemReader;
@@ -39,6 +41,7 @@ import com.devblogs.batch.mapper.ProductFieldSetMapper;
 import com.devblogs.batch.mapper.ProductJdbcItemWriter;
 import com.devblogs.model.Product;
 import com.example.batch.listener.JobListener;
+import com.example.batch.tasklet.VerifyTasklet;
 
 /**
  * https://docs.spring.io/spring-batch/docs/current/reference/html/step.html
@@ -53,6 +56,8 @@ public class Config {
 	private static final String JOB_NAME = "import";
 	private static final String JOB_MASTER_STEP = "jobMasterStep";
 	private static final String DECOMPRESS_STEP = "decompressStep";
+	private static final String VERIFY_STEP = "verifyStep";
+	private static final String DEFAULT_FLOW = "defaultFlow";
 	
 	@Autowired
 	private JobBuilderFactory jobBuilderFactory;
@@ -67,15 +72,29 @@ public class Config {
 	public Job job() {
 		return jobBuilderFactory.get(JOB_NAME)
 				.listener(jobListener())
-				.start(decompress())
-				.next(masterStep())
+				.start(defaultFlow())
+				.from(defaultFlow()).on("*").to(masterStep()).end()
 				.build();
 	}
 	
 	@Bean
-	public Step decompress() {
+	public Flow defaultFlow() {
+		return new FlowBuilder<Flow>(DEFAULT_FLOW)
+				.start(decompressStep())
+				.next(verifyStep())
+				.build();
+	}
+	
+	@Bean
+	public Step decompressStep() {
 		return stepBuilderFactory.get(DECOMPRESS_STEP)
 				.tasklet(decompressTasklet(null))
+				.build();
+	}
+	
+	@Bean Step verifyStep() {
+		return stepBuilderFactory.get(VERIFY_STEP)
+				.tasklet(verifyTasklet())
 				.build();
 	}
 	
@@ -160,6 +179,11 @@ public class Config {
 			}
 			return RepeatStatus.FINISHED;
 		};
+	}
+	
+	@Bean
+	public Tasklet verifyTasklet() {
+		return new VerifyTasklet();
 	}
 	
 	@Bean
