@@ -6,10 +6,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Map;
 import java.util.zip.ZipInputStream;
+
 import javax.sql.DataSource;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
@@ -30,9 +33,12 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.jdbc.core.JdbcTemplate;
+
 import com.devblogs.batch.mapper.ProductFieldSetMapper;
 import com.devblogs.batch.mapper.ProductJdbcItemWriter;
 import com.devblogs.model.Product;
+import com.example.batch.listener.JobListener;
 
 /**
  * https://docs.spring.io/spring-batch/docs/current/reference/html/step.html
@@ -54,10 +60,13 @@ public class Config {
 	private StepBuilderFactory stepBuilderFactory;
 	@Autowired
 	private DataSource dataSource;
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
 	
 	@Bean
 	public Job job() {
 		return jobBuilderFactory.get(JOB_NAME)
+				.listener(jobListener())
 				.start(decompress())
 				.next(masterStep())
 				.build();
@@ -151,5 +160,12 @@ public class Config {
 			}
 			return RepeatStatus.FINISHED;
 		};
+	}
+	
+	@Bean
+	public JobExecutionListener jobListener() {
+		JobListener jobListener = new JobListener();
+		jobListener.setJdbcTemplate(jdbcTemplate);
+		return jobListener;
 	}
 }
