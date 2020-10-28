@@ -14,6 +14,7 @@ import org.apache.commons.io.IOUtils;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
@@ -38,7 +39,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import com.devblogs.batch.mapper.ProductFieldSetMapper;
 import com.devblogs.batch.mapper.ProductJdbcItemWriter;
 import com.devblogs.model.Product;
+import com.example.batch.listener.DownloadStepListener;
 import com.example.batch.listener.JobListener;
+import com.example.batch.tasklet.DownloadTasklet;
 
 /**
  * https://docs.spring.io/spring-batch/docs/current/reference/html/step.html
@@ -53,6 +56,7 @@ public class Config {
 	private static final String JOB_NAME = "import";
 	private static final String JOB_MASTER_STEP = "jobMasterStep";
 	private static final String DECOMPRESS_STEP = "decompressStep";
+	private static final String DOWNLOAD_STEP = "downloadStep";
 	
 	@Autowired
 	private JobBuilderFactory jobBuilderFactory;
@@ -67,8 +71,18 @@ public class Config {
 	public Job job() {
 		return jobBuilderFactory.get(JOB_NAME)
 				.listener(jobListener())
-				.start(decompress())
-				.next(masterStep())
+				.start(download()).on("NO FILE").end()
+				.from(download()).on("FILE EXISTS").to(decompress())
+				.from(download()).on("*").fail()
+				.from(decompress()).on("*").to(masterStep()).end()
+				.build();
+	}
+	
+	@Bean
+	public Step download() {
+		return stepBuilderFactory.get(DOWNLOAD_STEP)
+				.listener(downloadTaskletListener())
+				.tasklet(downloadTasklet(null))
 				.build();
 	}
 	
@@ -132,6 +146,15 @@ public class Config {
 	
 	@Bean
 	@StepScope
+	public Tasklet downloadTasklet(@Value("#{jobParameters}") Map<String, Object> jobParameters) {
+		DownloadTasklet downloadTasklet = new DownloadTasklet();
+		Resource inputResource = new ClassPathResource((String) jobParameters.get("inputResource"));
+		downloadTasklet.setInputResource(inputResource);
+		return downloadTasklet;
+	}
+	
+	@Bean
+	@StepScope
 	public Tasklet decompressTasklet(@Value("#{jobParameters}") Map<String, Object> jobParameters) {
 		Resource inputResource = new ClassPathResource((String) jobParameters.get("inputResource"));
 		String targetDirectory = (String) jobParameters.get("targetDirectory");
@@ -160,6 +183,11 @@ public class Config {
 			}
 			return RepeatStatus.FINISHED;
 		};
+	}
+	
+	@Bean
+	public StepExecutionListener downloadTaskletListener() {
+		return new DownloadStepListener();
 	}
 	
 	@Bean
