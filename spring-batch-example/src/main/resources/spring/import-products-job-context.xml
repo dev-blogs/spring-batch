@@ -11,6 +11,16 @@ http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 		<listeners>
 			<listener ref="jobListener" />
 		</listeners>
+		<step id="download">
+			<tasklet ref="downloadTasklet">
+				<listeners>
+					<listener ref="downloadTaskletListener" />
+				</listeners>
+			</tasklet>
+			<end on="NO FILE"/>
+			<next on="FILE EXISTS" to="decompress" />
+			<fail on="*" />
+		</step>
 		<step id="decompress" next="readWriteProducts">
 			<tasklet ref="decompressTasklet"/>
 		</step>
@@ -24,6 +34,12 @@ http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 			</tasklet>
 		</step>
 	</job>
+	
+	<bean id="downloadTasklet" class="com.example.batch.tasklet.DownloadTasklet" scope="step">
+		<property name="inputResource" value="#{jobParameters['inputResource']}" />
+	</bean>
+	
+	<bean id="downloadTaskletListener" class="com.example.batch.listener.DownloadStepListener" />
 	
 	<bean id="jobListener" class="com.example.batch.listener.JobListener">
 		<property name="simpleJdbcTemplate" ref="simpleJdbcTemplate" />
