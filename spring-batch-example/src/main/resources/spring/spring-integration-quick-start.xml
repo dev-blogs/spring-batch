@@ -1,0 +1,65 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:batch="http://www.springframework.org/schema/batch"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
+	xsi:schemaLocation="http://www.springframework.org/schema/context
+			http://www.springframework.org/schema/context/spring-context-3.1.xsd
+			http://www.springframework.org/schema/jdbc
+			http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+			http://www.springframework.org/schema/beans
+			http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+			http://www.springframework.org/schema/batch
+			http://www.springframework.org/schema/batch/spring-batch-2.1.xsd
+			http://www.springframework.org/schema/integration
+			http://www.springframework.org/schema/integration/spring-integration-2.1.xsd
+			http://www.springframework.org/schema/integration/stream
+			http://www.springframework.org/schema/integration/stream/spring-integration-stream-2.0.xsd">
+			
+	<!-- @Autowired support -->
+	<context:annotation-config />
+
+	<!-- infrastructure -->
+	<jdbc:embedded-database id="dataSource" type="H2">
+		<jdbc:script location="org/springframework/batch/core/schema-h2.sql" />
+	</jdbc:embedded-database>
+	
+	<batch:job-repository id="jobRepository" 
+		data-source="dataSource"
+		transaction-manager="transactionManager" 
+		isolation-level-for-create="REPEATABLE_READ"
+		table-prefix="BATCH_"/>
+		
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<bean id="jobLauncher" class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+		<property name="jobRepository" ref="jobRepository" />
+	</bean>
+	
+	<bean class="org.springframework.batch.core.configuration.support.JobRegistryBeanPostProcessor">
+		<property name="jobRegistry" ref="jobRegistry" />
+	</bean>
+	
+	<bean id="jobRegistry" class="org.springframework.batch.core.configuration.support.MapJobRegistry" />
+
+	<!-- spring integration -->
+	<int:channel id="job-request" />
+	
+	<int-stream:stdout-channel-adapter id="job-execution" />
+	
+	<int:service-activator input-channel="job-request" output-channel="job-execution">
+		<bean class="com.example.batch.JobLaunchingMessageHandler" />
+	</int:service-activator>
+
+	<job id="echoJob" job-repository="jobRepository" xmlns="http://www.springframework.org/schema/batch">
+		<step id="echoStep">
+			<tasklet ref="echoTasklet"/>
+		</step>
+	</job>
+	
+	<bean id="echoTasklet" class="com.example.batch.tasklet.EchoJobParametersTasklet" />
+</beans>
