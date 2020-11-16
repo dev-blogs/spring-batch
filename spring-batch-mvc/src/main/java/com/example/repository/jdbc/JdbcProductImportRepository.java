@@ -20,7 +20,7 @@ public class JdbcProductImportRepository implements ProductImportRepository {
 	public void createProductImport(String importId) throws DublicateKeyException {
 		int count = jdbcTemplate.queryForObject(SQL_SELECT, new Object[] { importId }, Integer.class);
 		if (count > 0) {
-			throw new DublicateKeyException("Imoprt already exists: " + importId);
+			throw new DublicateKeyException("Import already exists: " + importId);
 		} else {
 			jdbcTemplate.update(SQL_INSERT, importId, new Date());
 		}
