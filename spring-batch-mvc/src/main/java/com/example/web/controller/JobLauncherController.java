@@ -12,12 +12,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.example.integration.ProductImportGateway;
 import com.example.repository.jdbc.ProductImportRepository;
 
 @Controller
 public class JobLauncherController {
 	@Autowired
 	private ProductImportRepository productImportRepository;
+	@Autowired
+	private ProductImportGateway productImportGateway;
 	
 	@RequestMapping(value = "/product-imports/{importId}", method = RequestMethod.PUT)
 	@ResponseStatus(HttpStatus.ACCEPTED)
@@ -28,6 +31,7 @@ public class JobLauncherController {
 		response.getWriter().println("echo content: " + content + "<br>");
 		
 		productImportRepository.createProductImport(importId);
+		productImportGateway.importProducts(content);
 		
 		response.getWriter().println("session=" + request.getSession(true).getId());
 	}
