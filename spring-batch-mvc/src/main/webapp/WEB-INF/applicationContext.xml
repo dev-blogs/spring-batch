@@ -5,6 +5,7 @@
 	xmlns:context="http://www.springframework.org/schema/context"
 	xmlns:int="http://www.springframework.org/schema/integration"
 	xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
+	xmlns:int-file="http://www.springframework.org/schema/integration/file"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
 			http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 			http://www.springframework.org/schema/jdbc
@@ -14,7 +15,9 @@
 			http://www.springframework.org/schema/integration
 			http://www.springframework.org/schema/integration/spring-integration-2.1.xsd
 			http://www.springframework.org/schema/integration/stream
-			http://www.springframework.org/schema/integration/stream/spring-integration-stream-2.0.xsd">
+			http://www.springframework.org/schema/integration/stream/spring-integration-stream-2.0.xsd
+			http://www.springframework.org/schema/integration/file
+			http://www.springframework.org/schema/integration/file/spring-integration-file-2.0.xsd">
 
 	<!-- dataSource -->
 	<bean id="dataSource" class="org.springframework.jdbc.datasource.SingleConnectionDataSource">
@@ -39,7 +42,15 @@
 	
 	<int:channel id="product-import-as-string" />
 	
-	<int-stream:stdout-channel-adapter channel="product-import-as-string" />
+	<!-- <int-stream:stdout-channel-adapter channel="product-import-as-string" /> -->
+	
+	<int-file:outbound-channel-adapter 
+		directory="file:/home/vostro/practice/temp222"
+		auto-create-directory="true"
+		channel="product-import-as-string"
+		filename-generator="productImportFileNameGenerator" />
+		
+	<bean id="productImportFileNameGenerator" class="com.example.integration.ProductImportFileNameGenerator" />
 	
 	<!-- spring bean scanning -->
 	<context:annotation-config />
