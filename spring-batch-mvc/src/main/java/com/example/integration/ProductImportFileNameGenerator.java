@@ -11,6 +11,6 @@ public class ProductImportFileNameGenerator implements FileNameGenerator {
 		Assert.isInstanceOf(String.class, message.getPayload());
 		
 		String payload = (String) message.getPayload();
-		return payload.getClass() + ".xml";
+		return ProductImportUtils.extractImportId(payload);
 	}
 }
