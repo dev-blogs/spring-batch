@@ -41,8 +41,7 @@
 	<int:gateway id="productImportGateway" service-interface="com.example.integration.ProductImportGateway" default-request-channel="product-import-as-string" />
 	
 	<int:channel id="product-import-as-string" />
-	
-	<!-- <int-stream:stdout-channel-adapter channel="product-import-as-string" /> -->
+	<int:channel id="job-requests" />
 	
 	<int-file:outbound-channel-adapter 
 		directory="file:/home/vostro/practice/temp222"
@@ -50,10 +49,26 @@
 		channel="product-import-as-string"
 		filename-generator="productImportFileNameGenerator" />
 		
+	<int-file:inbound-channel-adapter 
+		directory="file:/home/vostro/practice/temp222"
+		channel="product-imports"
+		auto-create-directory="true"
+		filename-pattern="*.xml">
+		<int:poller fixed-rate="1000" />
+	</int-file:inbound-channel-adapter>
+	
+	<int:service-activator 
+		input-channel="product-imports"
+		output-channel="job-requests">
+		<bean class="com.example.integration.ProductImportToJobLauncherRequestHandler" />
+	</int:service-activator>
+	
+	<int-stream:stdout-channel-adapter channel="job-requests" />
+		
 	<bean id="productImportFileNameGenerator" class="com.example.integration.ProductImportFileNameGenerator" />
 	
 	<!-- spring bean scanning -->
 	<context:annotation-config />
 	<context:component-scan base-package="com.example.repository.jdbc" />
 	
-</beans>
+</beans>product-import-as-string
