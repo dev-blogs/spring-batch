@@ -71,4 +71,4 @@
 	<context:annotation-config />
 	<context:component-scan base-package="com.example.repository.jdbc" />
 	
-</beans>product-import-as-string
+</beans>
