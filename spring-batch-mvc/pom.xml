@@ -115,6 +115,13 @@
 			<scope>provided</scope>
 		</dependency>
 		
+		<!-- commons-io util -->
+		<dependency>
+    		<groupId>commons-io</groupId>
+    		<artifactId>commons-io</artifactId>
+    		<version>1.2</version>
+		</dependency>
+		
 		<!-- h2 -->
 		<dependency>
 			<groupId>com.h2database</groupId>
