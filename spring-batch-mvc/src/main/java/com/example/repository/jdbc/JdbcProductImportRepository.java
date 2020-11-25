@@ -12,6 +12,7 @@ import com.example.exceptions.DublicateKeyException;
 public class JdbcProductImportRepository implements ProductImportRepository {
 	private static final String SQL_SELECT = "SELECT COUNT(1) FROM PRODUCT_IMPORT WHERE IMPORT_ID = ?";
 	private static final String SQL_INSERT = "INSERT INTO PRODUCT_IMPORT (IMPORT_ID, CREATION_DATE) VALUES (?, ?)";
+	private static final String SQL_UPDATE = "UPDATE PRODUCT_IMPORT SET JOB_INSTANCE_ID = ? WHERE IMPORT_ID = ?";
 	
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
@@ -24,5 +25,10 @@ public class JdbcProductImportRepository implements ProductImportRepository {
 		} else {
 			jdbcTemplate.update(SQL_INSERT, importId, new Date());
 		}
+	}
+
+	@Override
+	public void mapImportToJobInstance(String importId, Long jobInstanceId) {
+		jdbcTemplate.update(SQL_UPDATE, jobInstanceId, importId);
 	}
 }
