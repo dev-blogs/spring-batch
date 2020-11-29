@@ -71,6 +71,8 @@
 		<property name="mappingLocation" value="classpath:/xml/castor-xml-mapping.xml" />
 	</bean>
 	
+	<bean id="productImportFileNameGenerator" class="com.example.integration.ProductImportFileNameGenerator" />
+	
 	<!-- spring integration -->
 	<int:gateway id="productImportGateway" service-interface="com.example.integration.ProductImportGateway" default-request-channel="product-import-as-string" />
 	
