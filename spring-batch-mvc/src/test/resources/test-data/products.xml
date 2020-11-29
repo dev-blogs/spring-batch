@@ -1,0 +1,8 @@
+<products import-id="partner-1-1">
+	<product>
+		<id>id1</id>
+		<name>product-name1</name>
+		<description>product-descrption1</description>
+		<price>10.0</price>
+	</product>
+</products>

@@ -1,4 +1,4 @@
-package com.example.integration;
+package com.example.utils;
 
 import java.io.StringReader;
 import javax.xml.bind.JAXBContext;

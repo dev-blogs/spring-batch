@@ -3,6 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
 	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:batch="http://www.springframework.org/schema/batch"
 	xmlns:int="http://www.springframework.org/schema/integration"
 	xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
 	xmlns:int-file="http://www.springframework.org/schema/integration/file"
@@ -12,6 +13,8 @@
 			http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
 			http://www.springframework.org/schema/context
 			http://www.springframework.org/schema/context/spring-context-3.0.xsd
+			http://www.springframework.org/schema/batch
+			http://www.springframework.org/schema/batch/spring-batch-2.1.xsd
 			http://www.springframework.org/schema/integration
 			http://www.springframework.org/schema/integration/spring-integration-2.1.xsd
 			http://www.springframework.org/schema/integration/stream
@@ -35,6 +38,37 @@
 	
 	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
 		<constructor-arg ref="dataSource" />
+	</bean>
+	
+	<!-- spring batch -->
+	<batch:job id="importProducts" xmlns="http://www.springframework.org/schema/batch">
+		<step id="mapImportToJobInstanceStep" next="readWriteProductStep">
+			<tasklet ref="mapImportToJobInstanceTasklet" />
+		</step>
+		<step id="readWriteProductStep">
+			<tasklet>
+				<chunk reader="productReader" writer="productWriter" commit-interval="100" />
+			</tasklet>
+		</step>
+	</batch:job>
+	
+	<bean id="mapImportToJobInstanceTasklet" class="com.example.batch.step.ImportToJobInstanceMappingTasklet" scope="step">
+		<property name="productImoprtId" value="#{jobParameters['importId']" />
+		<property name="productImportRepository" ref="jdbcProductImportRepository" />
+	</bean>
+	
+	<bean id="productReader" class="org.springframework.batch.item.xml.StaxEventItemReader" scope="step">
+		<property name="unmarshaller" ref="marshaller" />
+		<property name="fragmentRootElementName" value="product" />
+		<property name="resource" value="#{jobParameters['inputFile']}" />
+	</bean>
+	
+	<bean id="productWriter" class="com.example.batch.writer.ProductJdbcItemWriter">
+		<property name="jdbcTemplate" ref="jdbcTemplate" />
+	</bean>
+	
+	<bean id="marshaller" class="org.springframework.oxm.castor.CastorMarshaller">
+		<property name="mappingLocation" value="classpath:/xml/castor-xml-mapping.xml" />
 	</bean>
 	
 	<!-- spring integration -->
@@ -65,8 +99,6 @@
 	
 	<int-stream:stdout-channel-adapter channel="job-requests" />
 		
-	<bean id="productImportFileNameGenerator" class="com.example.integration.ProductImportFileNameGenerator" />
-	
 	<!-- spring bean scanning -->
 	<context:annotation-config />
 	<context:component-scan base-package="com.example.repository.jdbc" />

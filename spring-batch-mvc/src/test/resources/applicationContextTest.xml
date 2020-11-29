@@ -3,19 +3,72 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
 	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:batch="http://www.springframework.org/schema/batch"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
 			http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 			http://www.springframework.org/schema/jdbc
 			http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
 			http://www.springframework.org/schema/context
-			http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+			http://www.springframework.org/schema/context/spring-context-3.0.xsd
+			http://www.springframework.org/schema/batch
+			http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 
+	<!-- DataSource -->
 	<jdbc:embedded-database id="dataSource" type="H2">
 		<jdbc:script location="classpath:h2/schema.sql" />
+		<jdbc:script location="classpath:org/springframework/batch/core/schema-h2.sql" />
 	</jdbc:embedded-database>
 	
 	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
 		<constructor-arg ref="dataSource" />
+	</bean>
+	
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<constructor-arg ref="dataSource" />
+	</bean>
+	
+	<!-- spring batch -->
+	<batch:job id="importProducts" xmlns="http://www.springframework.org/schema/batch">
+		<step id="mapImportToJobInstanceStep" next="readWriteProductStep">
+			<tasklet ref="mapImportToJobInstanceTasklet" />
+		</step>
+		<step id="readWriteProductStep">
+			<tasklet>
+				<chunk reader="productReader" writer="productWriter" commit-interval="100" />
+			</tasklet>
+		</step>
+	</batch:job>
+	
+	<bean id="mapImportToJobInstanceTasklet" class="com.example.batch.step.ImportToJobInstanceMappingTasklet" scope="step">
+		<property name="productImoprtId" value="#{jobParameters['importId']}" />
+		<property name="productImportRepository" ref="jdbcProductImportRepository" />
+	</bean>
+	
+	<bean id="productReader" class="org.springframework.batch.item.xml.StaxEventItemReader" scope="step">
+		<property name="unmarshaller" ref="marshaller" />
+		<property name="fragmentRootElementName" value="product" />
+		<property name="resource" value="#{jobParameters['inputFile']}" />
+	</bean>
+	
+	<bean id="productWriter" class="com.example.batch.writer.ProductJdbcItemWriter">
+		<property name="jdbcTemplate" ref="jdbcTemplate" />
+	</bean>
+	
+	<!-- marshaller -->
+	<bean id="marshaller" class="org.springframework.oxm.castor.CastorMarshaller">
+		<property name="mappingLocation" value="classpath:/xml/castor-xml-mapping.xml" />
+	</bean>
+	
+	<!-- spring-batch infrastructure -->
+	<!-- all this attributes are used by default except isolation-level -->
+	<batch:job-repository id="jobRepository" 
+		data-source="dataSource"
+		transaction-manager="transactionManager" 
+		isolation-level-for-create="REPEATABLE_READ"
+		table-prefix="BATCH_"/>
+	
+	<bean id="jobLauncher" class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+		<property name="jobRepository" ref="jobRepository" />
 	</bean>
 	
 	<context:annotation-config />
