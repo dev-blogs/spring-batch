@@ -78,7 +78,6 @@
 	
 	<int:channel id="product-import-as-string" />
 	<int:channel id="job-requests" />
-	<!-- <int:channel id="job-execution" /> -->
 	
 	<int-file:outbound-channel-adapter 
 		directory="file:/home/vostro/practice/temp222"
