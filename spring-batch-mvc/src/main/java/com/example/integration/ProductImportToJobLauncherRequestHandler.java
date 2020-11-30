@@ -9,8 +9,9 @@ public class ProductImportToJobLauncherRequestHandler {
 	public JobLaunchRequest adapt(File products) {
 		String importId = FilenameUtils.getBaseName(products.getAbsolutePath());
 		Map<String, String> jobParameters = new HashMap<>();
-		jobParameters.put("imoprtId", importId);
+		jobParameters.put("importId", importId);
 		jobParameters.put("importFile", products.getAbsolutePath());
+		jobParameters.put("timestamp", new Long(System.currentTimeMillis()).toString());
 		return new JobLaunchRequest("importProducts", jobParameters);
 	}
 }

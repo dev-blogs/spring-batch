@@ -11,4 +11,12 @@ public class JobLaunchRequest {
 		this.jobName = jobName;
 		this.jobParameters = jobParameters;
 	}
+
+	public String getJobName() {
+		return jobName;
+	}
+
+	public Map<String, String> getJobParameters() {
+		return jobParameters;
+	}
 }

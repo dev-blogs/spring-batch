@@ -53,14 +53,14 @@
 	</batch:job>
 	
 	<bean id="mapImportToJobInstanceTasklet" class="com.example.batch.step.ImportToJobInstanceMappingTasklet" scope="step">
-		<property name="productImoprtId" value="#{jobParameters['importId']" />
+		<property name="productImoprtId" value="#{jobParameters['importId']}" />
 		<property name="productImportRepository" ref="jdbcProductImportRepository" />
 	</bean>
 	
 	<bean id="productReader" class="org.springframework.batch.item.xml.StaxEventItemReader" scope="step">
 		<property name="unmarshaller" ref="marshaller" />
 		<property name="fragmentRootElementName" value="product" />
-		<property name="resource" value="#{jobParameters['inputFile']}" />
+		<property name="resource" value="file:#{jobParameters['importFile']}" />
 	</bean>
 	
 	<bean id="productWriter" class="com.example.batch.writer.ProductJdbcItemWriter">
@@ -68,7 +68,7 @@
 	</bean>
 	
 	<bean id="marshaller" class="org.springframework.oxm.castor.CastorMarshaller">
-		<property name="mappingLocation" value="classpath:/xml/castor-xml-mapping.xml" />
+		<property name="mappingLocation" value="classpath:xml/castor-xml-mapping.xml" />
 	</bean>
 	
 	<bean id="productImportFileNameGenerator" class="com.example.integration.ProductImportFileNameGenerator" />
@@ -78,6 +78,7 @@
 	
 	<int:channel id="product-import-as-string" />
 	<int:channel id="job-requests" />
+	<!-- <int:channel id="job-execution" /> -->
 	
 	<int-file:outbound-channel-adapter 
 		directory="file:/home/vostro/practice/temp222"
@@ -99,8 +100,35 @@
 		<bean class="com.example.integration.ProductImportToJobLauncherRequestHandler" />
 	</int:service-activator>
 	
-	<int-stream:stdout-channel-adapter channel="job-requests" />
-		
+	<int:service-activator 
+		input-channel="job-requests" 
+		output-channel="job-execution">
+		<bean class="com.example.integration.JobLaunchingMessageHandler">
+			<property name="jobLauncher" ref="jobLauncher" />
+			<property name="jobRegistry" ref="jobRegistry" />
+		</bean>
+	</int:service-activator>
+	
+	<int-stream:stdout-channel-adapter id="job-execution" />
+	
+	<!-- spring-batch infrastructure -->
+	<!-- all this attributes are used by default except isolation-level -->
+	<batch:job-repository id="jobRepository" 
+		data-source="dataSource"
+		transaction-manager="transactionManager" 
+		isolation-level-for-create="REPEATABLE_READ"
+		table-prefix="BATCH_"/>
+	
+	<bean id="jobLauncher" class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+		<property name="jobRepository" ref="jobRepository" />
+	</bean>
+	
+	<bean class="org.springframework.batch.core.configuration.support.JobRegistryBeanPostProcessor">
+		<property name="jobRegistry" ref="jobRegistry" />
+	</bean>
+	
+	<bean id="jobRegistry" class="org.springframework.batch.core.configuration.support.MapJobRegistry" />
+	
 	<!-- spring bean scanning -->
 	<context:annotation-config />
 	<context:component-scan base-package="com.example.repository.jdbc" />

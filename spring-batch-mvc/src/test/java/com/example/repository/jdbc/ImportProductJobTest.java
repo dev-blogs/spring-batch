@@ -28,7 +28,7 @@ public class ImportProductJobTest {
 	public void test() throws Exception {
 		JobParameters jobParameters = new JobParametersBuilder()
 				.addString("importId", "1234")
-				.addString("inputFile", "classpath:test-data/products.xml")
+				.addString("importFile", "classpath:test-data/products.xml")
 				.addLong("timestamp", System.currentTimeMillis())
 				.toJobParameters();
 		
