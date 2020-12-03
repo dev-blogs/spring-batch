@@ -7,6 +7,16 @@
                         http://www.springframework.org/schema/context
                         http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
-	<context:component-scan base-package="com.example.web.controller"/>
+	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+		<property name="messageConverters">
+			<list>
+				<bean class="org.springframework.http.converter.StringHttpMessageConverter" />
+				<bean class="org.springframework.http.converter.xml.MarshallingHttpMessageConverter">
+					<constructor-arg ref="marshaller" />
+				</bean>
+			</list>
+		</property>
+	</bean>
 	
+	<context:component-scan base-package="com.example.web.controller"/>
 </beans>

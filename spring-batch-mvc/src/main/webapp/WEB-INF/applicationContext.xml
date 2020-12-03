@@ -128,6 +128,10 @@
 	
 	<bean id="jobRegistry" class="org.springframework.batch.core.configuration.support.MapJobRegistry" />
 	
+	<bean id="jobExplorer" class="org.springframework.batch.core.explore.support.JobExplorerFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
 	<!-- spring bean scanning -->
 	<context:annotation-config />
 	<context:component-scan base-package="com.example.repository.jdbc" />
