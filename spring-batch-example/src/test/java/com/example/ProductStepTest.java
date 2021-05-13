@@ -13,6 +13,7 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +50,7 @@ public class ProductStepTest {
 		jobLauncher.run(job, jobParameters);
 		
 		List<JobExecution> failedJobExecution = getFailedJobExecution("importProducts");
-		System.out.println("failedJobExecution.size(): " + failedJobExecution.size());
+		//System.out.println("failedJobExecution.size(): " + failedJobExecution.size());
 		
 		/*List<JobExecution> runningJobInstances = new ArrayList<>();
 		List<String> jobNames = jobExplorer.getJobNames();
@@ -78,13 +79,66 @@ public class ProductStepTest {
 			for (JobInstance jobInstance : jobInstances) {
 				List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance);
 				for (JobExecution jobExecution : jobExecutions) {
-					if (jobExecution.getExitStatus().equals(ExitStatus.FAILED)) {
+					/*if (jobExecution.getExitStatus().equals(ExitStatus.FAILED)) {
 						failedJobExecutions.add(jobExecution);
-					}
+					}*/
+					List<Throwable> failureExceptions = getFailureExceptions(jobExecution);
+					printFailureExceptions(failureExceptions);
+					List<String> failureExitDescriptions = getFailureExitDescriptions(jobExecution);
+					printFailureDescriptions(failureExitDescriptions);
 				}
 			}
 		}
 		
 		return failedJobExecutions;
+	}
+	
+	private List<Throwable> getFailureExceptions(JobExecution jobExecution) {
+		List<Throwable> failureExceptions = new ArrayList<>();
+		
+		if (!jobExecution.getExitStatus().equals(ExitStatus.FAILED)) {
+			return failureExceptions;
+		}
+		
+		List<Throwable> jobFailureExceptions = jobExecution.getFailureExceptions();
+		failureExceptions.addAll(jobFailureExceptions);
+		
+		for (StepExecution stepExecution : jobExecution.getStepExecutions()) {
+			List<Throwable> stepFailureExceptions = stepExecution.getJobExecution().getFailureExceptions();
+			failureExceptions.addAll(stepFailureExceptions);
+		}
+		
+		return failureExceptions;
+	}
+	
+	private List<String> getFailureExitDescriptions(JobExecution jobExecution) {
+		List<String> exitDescriptions = new ArrayList<>();
+		
+		if (!jobExecution.getExitStatus().equals(ExitStatus.FAILED)) {
+			return exitDescriptions;
+		}
+		
+		ExitStatus jobExitStatus = jobExecution.getExitStatus();
+		
+		if (jobExitStatus.getExitDescription().isEmpty()) {
+			exitDescriptions.add(jobExitStatus.getExitDescription());
+		}
+		
+		for (StepExecution stepExecution : jobExecution.getStepExecutions()) {
+			ExitStatus stepExitStatus = stepExecution.getExitStatus();
+			if (stepExitStatus.equals(ExitStatus.FAILED) && !"".equals(stepExitStatus.getExitDescription())) {
+				exitDescriptions.add(stepExitStatus.getExitDescription());
+			}
+		}
+		
+		return exitDescriptions;
+	}
+	
+	private void printFailureExceptions(List<Throwable> failureExceptions) {
+		System.out.println(failureExceptions);
+	}
+	
+	private void printFailureDescriptions(List<String> failureDescriptions) {
+		System.out.println(failureDescriptions);
 	}
 }
