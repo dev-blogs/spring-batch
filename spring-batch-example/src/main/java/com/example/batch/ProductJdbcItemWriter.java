@@ -25,6 +25,7 @@ public class ProductJdbcItemWriter implements ItemWriter<Product> {
 	}
 
 	public void write(List<? extends Product> items) throws Exception {
+		Thread.sleep(1000);
 		for (Product item : items) {
 			SqlParameterSource args = itemSqlParameterSourceProvider.createSqlParameterSource(item);
 			int updated = simpleJdbcTemplate.update(UPDATE_PRODUCT, args);

@@ -1,11 +1,18 @@
 package com.example;
 
 import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Executors;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
@@ -25,6 +32,8 @@ public class ProductStepTest {
 	private JobLauncher jobLauncher;
 	@Autowired
 	private SimpleJdbcTemplate simpleJdbcTemplate;
+	@Autowired
+	private JobExplorer jobExplorer;
 	
 	@Test
 	@DirtiesContext
@@ -36,7 +45,17 @@ public class ProductStepTest {
 				.addLong("timestamp", System.currentTimeMillis())
 				.toJobParameters();
 		
-		jobLauncher.run(job, jobParameters);
+		Executors.newSingleThreadExecutor().submit(() -> jobLauncher.run(job, jobParameters));
+		
+		List<JobExecution> runningJobInstances = new ArrayList<>();
+		List<String> jobNames = jobExplorer.getJobNames();
+		for (String jobName : jobNames) {
+			Set<JobExecution> jobExecutions = jobExplorer.findRunningJobExecutions(jobName);
+			runningJobInstances.addAll(jobExecutions);
+		}
+		
+		System.out.println("jobNames: " + jobNames.size());
+		System.out.println("running job instances: " + runningJobInstances.size());
 		
 		assertEquals(5, simpleJdbcTemplate.queryForInt("SELECT count(*) FROM products"));
 	}

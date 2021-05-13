@@ -37,6 +37,13 @@
 	
 	<batch:job-repository id="jobRepository" transaction-manager="transactionManager" />
 	
+	<bean id="jobExplorer" class="org.springframework.batch.core.explore.support.JobExplorerFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="lobHandler" ref="lobHandler" />
+	</bean>
+	
+	<bean id="lobHandler" class="org.springframework.jdbc.support.lob.DefaultLobHandler" />
+	
 	<bean id="jobLauncher" class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
 		<property name="jobRepository" ref="jobRepository" />
 	</bean>
