@@ -4,12 +4,13 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Executors;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.explore.JobExplorer;
@@ -45,9 +46,12 @@ public class ProductStepTest {
 				.addLong("timestamp", System.currentTimeMillis())
 				.toJobParameters();
 		
-		Executors.newSingleThreadExecutor().submit(() -> jobLauncher.run(job, jobParameters));
+		jobLauncher.run(job, jobParameters);
 		
-		List<JobExecution> runningJobInstances = new ArrayList<>();
+		List<JobExecution> failedJobExecution = getFailedJobExecution("importProducts");
+		System.out.println("failedJobExecution.size(): " + failedJobExecution.size());
+		
+		/*List<JobExecution> runningJobInstances = new ArrayList<>();
 		List<String> jobNames = jobExplorer.getJobNames();
 		for (String jobName : jobNames) {
 			Set<JobExecution> jobExecutions = jobExplorer.findRunningJobExecutions(jobName);
@@ -55,8 +59,32 @@ public class ProductStepTest {
 		}
 		
 		System.out.println("jobNames: " + jobNames.size());
-		System.out.println("running job instances: " + runningJobInstances.size());
+		System.out.println("running job instances: " + runningJobInstances.size());*/
 		
 		assertEquals(5, simpleJdbcTemplate.queryForInt("SELECT count(*) FROM products"));
+	}
+	
+	private List<JobExecution> getFailedJobExecution(String jobName) {
+		List<JobExecution> failedJobExecutions = new ArrayList<>();
+		
+		int pageSize = 10;
+		int currentPageSize = 10;
+		int currentPage = 0;
+		
+		while (currentPageSize == pageSize) {
+			List<JobInstance> jobInstances = jobExplorer.getJobInstances(jobName, currentPage * pageSize, pageSize);
+			currentPageSize = jobInstances.size();
+			currentPage++;
+			for (JobInstance jobInstance : jobInstances) {
+				List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance);
+				for (JobExecution jobExecution : jobExecutions) {
+					if (jobExecution.getExitStatus().equals(ExitStatus.FAILED)) {
+						failedJobExecutions.add(jobExecution);
+					}
+				}
+			}
+		}
+		
+		return failedJobExecutions;
 	}
 }
