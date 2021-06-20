@@ -1,21 +1,25 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:batch="http://www.springframework.org/schema/batch"
+	xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
 http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 http://www.springframework.org/schema/batch
-http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
+http://www.springframework.org/schema/batch/spring-batch-2.1.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context-2.5.xsd">
 
 	<job id="importProducts" xmlns="http://www.springframework.org/schema/batch">
 		<listeners>
 			<listener ref="jobListener" />
+			<listener ref="monitoringJobListener" />
 		</listeners>
 		<step id="decompress" next="readWriteProducts">
 			<tasklet ref="decompressTasklet"/>
 		</step>
 		<step id="readWriteProducts">
 			<tasklet>
-				<chunk reader="reader" writer="writer" commit-interval="100" skip-limit="5">
+				<chunk reader="reader" writer="writer" commit-interval="100" skip-limit="2">
 					<skippable-exception-classes>
 						<include class="org.springframework.batch.item.file.FlatFileParseException"/>
 					</skippable-exception-classes>
@@ -23,6 +27,11 @@ http://www.springframework.org/schema/batch/spring-batch-2.1.xsd">
 			</tasklet>
 		</step>
 	</job>
+	
+	<context:annotation-config />
+	<context:component-scan base-package="com.example" />
+
+	<bean id="batchMonitoringNotifier" class="com.example.notifier.BatchMonitoringNotifierImpl" />
 	
 	<bean id="jobListener" class="com.example.batch.listener.JobListener">
 		<property name="simpleJdbcTemplate" ref="simpleJdbcTemplate" />
