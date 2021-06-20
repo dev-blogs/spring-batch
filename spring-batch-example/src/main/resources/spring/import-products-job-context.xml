@@ -31,8 +31,6 @@ http://www.springframework.org/schema/context/spring-context-2.5.xsd">
 	<context:annotation-config />
 	<context:component-scan base-package="com.example" />
 
-	<bean id="batchMonitoringNotifier" class="com.example.notifier.BatchMonitoringNotifierImpl" />
-	
 	<bean id="jobListener" class="com.example.batch.listener.JobListener">
 		<property name="simpleJdbcTemplate" ref="simpleJdbcTemplate" />
 	</bean>
