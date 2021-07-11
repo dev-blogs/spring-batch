@@ -38,11 +38,6 @@ public class ProductStepTest {
 		
 		jobLauncher.run(job, jobParameters);
 		
-		while (true) {
-			Thread.sleep(1000);
-			System.out.println("Sleeping...");
-		}
-		
-		//assertEquals(5, simpleJdbcTemplate.queryForInt("SELECT count(*) FROM products"));
+		assertEquals(5, simpleJdbcTemplate.queryForInt("SELECT count(*) FROM products"));
 	}
 }
