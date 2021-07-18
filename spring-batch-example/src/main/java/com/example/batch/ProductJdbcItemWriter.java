@@ -1,12 +1,15 @@
 package com.example.batch;
 
 import java.util.List;
+
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.ItemSqlParameterSourceProvider;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
+
 import com.example.model.Product;
+import com.example.utils.ThreadUtils;
 
 public class ProductJdbcItemWriter implements ItemWriter<Product> {
 	public static final String INSERT_PRODUCT = "insert into products " + "(id,name,description,price) values(:id,:name,:description,:price)";
@@ -25,6 +28,7 @@ public class ProductJdbcItemWriter implements ItemWriter<Product> {
 	}
 
 	public void write(List<? extends Product> items) throws Exception {
+		ThreadUtils.writeThreadExecutionMessage("write", items);
 		for (Product item : items) {
 			SqlParameterSource args = itemSqlParameterSourceProvider.createSqlParameterSource(item);
 			int updated = simpleJdbcTemplate.update(UPDATE_PRODUCT, args);
