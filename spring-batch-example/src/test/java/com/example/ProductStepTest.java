@@ -15,7 +15,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { 
-		"/spring/import-products-job-context.xml", 
+		"/spring/server-job-context.xml", 
 		"/spring/infrustructure-context.xml" 
 	})
 public class ProductStepTest {
@@ -30,9 +30,6 @@ public class ProductStepTest {
 	@DirtiesContext
 	public void testIntegration() throws Exception {
 		JobParameters jobParameters = new JobParametersBuilder()
-				.addString("inputResource", "classpath:/input/products.zip")
-				.addString("targetDirectory", "./target/importproductsbatch/")
-				.addString("targetFile", "products.txt")
 				.addLong("timestamp", System.currentTimeMillis())
 				.toJobParameters();
 		
