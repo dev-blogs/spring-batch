@@ -27,29 +27,36 @@
 		</step>
 	</job>
 	
-	<bean id="reader" class="org.springframework.batch.item.database.JdbcPagingItemReader" scope="step">
-	    <property name="dataSource" ref="dataSource"/>
-	    <property name="queryProvider">
-	        <bean class="org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean">
-	        	<property name="dataSource" ref="dataSource" />
-	            <property name="selectClause" value="select id,name,description,price"/>
-	            <property name="fromClause" value="from products"/>
-	            <property name="sortKey" value="id"/>	        
-	        </bean>
-	    </property>    
-	    <property name="pageSize" value="10"/>
-	    <property name="rowMapper">
-	    	<bean class="com.example.batch.mapper.ProductRowMapper" />
-	    </property>
+	<bean id="reader" class="org.springframework.batch.item.file.FlatFileItemReader" scope="step">
+		<property name="resource" value="file:#{jobParameters['targetDirectory']+jobParameters['targetFile']}" />
+		<property name="linesToSkip" value="1" />
+		<property name="lineMapper">
+			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+				<property name="lineTokenizer">
+					<bean class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+						<property name="names" value="ID,NAME,DESCRIPTION,PRICE" />
+					</bean>
+				</property>
+				<property name="fieldSetMapper">
+					<bean class="com.example.batch.ProductFieldSetMapper" />
+				</property>
+			</bean>
+		</property>
+	</bean>
+	
+	<bean id="chunkWriter" class="org.springframework.batch.integration.chunk.ChunkMessageChannelItemWriter" scope="step">
+		<property name="messagingOperations" ref="messagingGateway" />
+		<property name="replyChannel" ref="replies" />
+		<property name="maxWaitTimeouts" value="10" />
 	</bean>
 	
 	<bean id="messagingGateway" class="org.springframework.integration.core.MessagingTemplate">
-		<property name="defaultChannel" ref="requests" />
+		<property name="defaultChannel" ref="request" />
 		<property name="receiveTimeout" value="1000" />
 	</bean>
 	
 	<!-- channels -->
-	<int:channel id="requests" />
+	<int:channel id="request" />
 	<int:channel id="incoming" />
 	
 	<int:transformer input-channel="incoming" output-channel="replies" ref="headerExtractor" method="extract" />
@@ -57,7 +64,7 @@
 	<bean id="headerExtractor" class="org.springframework.batch.integration.chunk.JmsRedeliveredExtractor"/>
 	
 	<!-- Adapters -->
-	<int-jms:outbound-channel-adapter connection-factory="connectionFactory" channel="requests"	destination-name="requests" />
+	<int-jms:outbound-channel-adapter connection-factory="connectionFactory" channel="request"	destination-name="request" />
 	
 	<bean class="org.springframework.beans.factory.config.CustomScopeConfigurer">
 		<property name="scopes">
@@ -89,32 +96,16 @@
 		</int:interceptors>
 	</int:channel>
 	
-	<bean id="chunkWriter" class="org.springframework.batch.integration.chunk.ChunkMessageChannelItemWriter" scope="step">
-		<property name="messagingOperations" ref="messagingGateway" />
-		<property name="replyChannel" ref="replies" />
-		<property name="maxWaitTimeouts" value="10" />
-	</bean>
-	
-	<bean id="chunkHandler" class="org.springframework.batch.integration.chunk.RemoteChunkHandlerFactoryBean">
+	<!-- <bean id="chunkHandler" class="org.springframework.batch.integration.chunk.RemoteChunkHandlerFactoryBean">
 		<property name="chunkWriter" ref="chunkWriter" />
 		<property name="step" ref="stepRemoteChunk" />
-	</bean>
+	</bean> -->
 	
-	<bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory" depends-on="brokerService">
+	<!-- <bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory" depends-on="brokerService">
 		<property name="brokerURL" value="vm://localhost?broker.persistent=false"/>
-	</bean>
+	</bean> -->
 	
-	<bean id="brokerService" class="org.apache.activemq.broker.BrokerService" init-method="start"
-		destroy-method="stop">
-		<property name="brokerName" value="localhost" />
-		<property name="useJmx" value="false"/>
-		<property name="transportConnectorURIs">
-			<list>
-				<value>vm://127.0.0.1</value>
-			</list>
-		</property>
-		<property name="persistenceAdapter">
-			<bean class="org.apache.activemq.store.memory.MemoryPersistenceAdapter"/>
-		</property>
-	</bean>
+	<!-- <bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+		<property name="brokerURL" value="tcp://localhost:61616" />
+	</bean> -->
 </beans>
