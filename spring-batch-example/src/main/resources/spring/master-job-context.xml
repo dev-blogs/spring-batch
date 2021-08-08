@@ -20,12 +20,21 @@
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
 	<job id="remoteChunkingImportProductsJob" xmlns="http://www.springframework.org/schema/batch">
+		<step id="decompress" next="stepRemoteChunk">
+			<tasklet ref="decompressTasklet"/>
+		</step>
 		<step id="stepRemoteChunk">
 			<tasklet>
 				<chunk reader="reader" writer="chunkWriter" commit-interval="10" />
 			</tasklet>
 		</step>
 	</job>
+	
+	<bean id="decompressTasklet" class="com.example.batch.DecompressTasklet" scope="step">
+		<property name="inputResource" value="#{jobParameters['inputResource']}" />
+		<property name="targetDirectory" value="#{jobParameters['targetDirectory']}" />
+		<property name="targetFile" value="#{jobParameters['targetFile']}" />
+	</bean>
 	
 	<bean id="reader" class="org.springframework.batch.item.file.FlatFileItemReader" scope="step">
 		<property name="resource" value="file:#{jobParameters['targetDirectory']+jobParameters['targetFile']}" />
