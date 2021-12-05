@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.util.Map;
 import java.util.zip.ZipInputStream;
 import javax.sql.DataSource;
+
+import com.devblogs.listeners.JobListener;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.batch.core.Job;
@@ -25,6 +27,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -42,6 +45,7 @@ import com.devblogs.model.Product;
  *
  */
 @Configuration
+@ComponentScan(basePackages = { "com.devblogs" })
 @EnableBatchProcessing(modular = true)
 public class Config {
 	private static final String JOB_NAME = "import";
@@ -54,10 +58,13 @@ public class Config {
 	private StepBuilderFactory stepBuilderFactory;
 	@Autowired
 	private DataSource dataSource;
+	@Autowired
+	private JobListener jobListener;
 	
 	@Bean
 	public Job job() {
 		return jobBuilderFactory.get(JOB_NAME)
+				.listener(jobListener)
 				.start(decompress())
 				.next(masterStep())
 				.build();

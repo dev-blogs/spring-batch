@@ -1,8 +1,6 @@
 package com.devblogs.config;
 
 import javax.sql.DataSource;
-import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.support.SimpleJobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
@@ -29,17 +27,7 @@ public class InfrustructureConfig {
 		factory.afterPropertiesSet();
 		return factory.getObject();
 	}
-	
-	@Bean
-	public JobBuilderFactory jobBuilderFactory() throws Exception {
-		return new JobBuilderFactory(jobRepository());
-	}
-	
-	@Bean
-	public StepBuilderFactory stepBuilderFactory() throws Exception {
-		return new StepBuilderFactory(jobRepository(), transactionManager);
-	}
-	
+
 	@Bean
 	public JobLauncher jobLauncher() throws Exception {
 		SimpleJobLauncher jobLauncher = new SimpleJobLauncher();
