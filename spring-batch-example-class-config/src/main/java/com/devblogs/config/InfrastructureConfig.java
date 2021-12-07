@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
 @Configuration
-public class InfrustructureConfig {
+public class InfrastructureConfig {
 	@Autowired
 	private DataSource dataSource;
 	@Autowired

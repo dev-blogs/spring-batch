@@ -13,10 +13,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.devblogs.config.Config;
 import com.devblogs.config.DatabaseConfig;
-import com.devblogs.config.InfrustructureConfig;
+import com.devblogs.config.InfrastructureConfig;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { Config.class, DatabaseConfig.class, InfrustructureConfig.class })
+@ContextConfiguration(classes = { Config.class, DatabaseConfig.class, InfrastructureConfig.class })
 public class ProductStepTest {
 	@Autowired
 	private Job job;
