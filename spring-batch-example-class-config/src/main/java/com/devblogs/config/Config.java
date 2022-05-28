@@ -17,6 +17,7 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.step.skip.SkipLimitExceededException;
 import org.springframework.batch.core.step.skip.SkipPolicy;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.file.FlatFileItemReader;
@@ -91,6 +92,7 @@ public class Config {
 	@Bean
 	public SkipPolicy skipPolicy() {
 		return (t, sc) -> {
+			if (sc >= 1) throw new SkipLimitExceededException(sc + 1, t);
 			if (t instanceof FlatFileParseException) {
 				return true;
 			}
